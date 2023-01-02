@@ -4,6 +4,8 @@ import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import * as dat from "dat.gui";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader.js";
+import waterVertexShader from "./shaders/water/vertex.glsl?raw";
+import waterFragmentShader from "./shaders/water/fragment.glsl?raw";
 
 /**
  * Base
@@ -11,7 +13,8 @@ import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader.js";
 // Debug
 const gui = new dat.GUI();
 const debugObject = {
-  waterColor: 0x7ec0ee,
+  depthColor: "#1b1b89",
+  surfaceColor: "#4fadfc",
 };
 
 // Canvas
@@ -72,20 +75,33 @@ gltfLoader.load("models/lowPolyIslandWithoutWater.glb", (gltf) => {
  * Water
  */
 const waterGeometry = new THREE.PlaneGeometry(10, 10, 32, 32);
-const waterMaterial = new THREE.MeshStandardMaterial({
-  color: debugObject.waterColor,
+const waterMaterial = new THREE.ShaderMaterial({
+  uniforms: {
+    uTime: { value: 0 },
+
+    uBigWavesElevation: { value: 0.2 },
+    uBigWavesFrequency: { value: new THREE.Vector2(4, 1.5) },
+    uBigWavesSpeed: { value: 0.75 },
+    uSmallWavesElevation: { value: 0.15 },
+    uSmallWavesFrequency: { value: 4 },
+    uSmallWavesSpeed: { value: 0.2 },
+    uSmallWavesIterations: { value: 4 },
+
+    uDepthColor: { value: new THREE.Color(debugObject.depthColor) },
+    uSurfaceColor: { value: new THREE.Color(debugObject.surfaceColor) },
+    uColorOffset: { value: 0.66 },
+    uColorMultiplier: { value: 2.5 },
+  },
+  vertexShader: waterVertexShader,
+  fragmentShader: waterFragmentShader,
   transparent: true,
-  opacity: 0.5,
+  side: THREE.DoubleSide,
 });
 const water = new THREE.Mesh(waterGeometry, waterMaterial);
 water.rotation.x = -Math.PI * 0.5;
 water.position.y = 0.01;
 water.name = "Water";
 scene.add(water);
-
-gui.addColor(debugObject, "waterColor").onChange(() => {
-  waterMaterial.color.set(debugObject.waterColor);
-});
 
 /**
  * Lights
@@ -144,6 +160,7 @@ scene.add(camera);
 const controls = new OrbitControls(camera, canvas);
 controls.target.set(0, 0.75, 0);
 controls.enableDamping = true;
+controls.maxPolarAngle = Math.PI / 2;
 
 /**
  * Renderer
@@ -161,6 +178,81 @@ renderer.toneMappingExposure = 3;
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.setClearColor(0x99ccff, 1);
+
+// Debug
+gui
+  .add(waterMaterial.uniforms.uBigWavesElevation, "value")
+  .min(0)
+  .max(1)
+  .step(0.001)
+  .name("bigWavesElevation");
+
+gui
+  .add(waterMaterial.uniforms.uBigWavesFrequency.value, "x")
+  .min(0)
+  .max(10)
+  .step(0.001)
+  .name("BigWavesFrequencyX");
+
+gui
+  .add(waterMaterial.uniforms.uBigWavesFrequency.value, "y")
+  .min(0)
+  .max(10)
+  .step(0.001)
+  .name("BigWavesFrequencyY");
+
+gui
+  .add(waterMaterial.uniforms.uBigWavesSpeed, "value")
+  .min(0)
+  .max(10)
+  .step(0.001)
+  .name("BigWavesSpeed");
+
+gui
+  .add(waterMaterial.uniforms.uSmallWavesElevation, "value")
+  .min(0)
+  .max(1)
+  .step(0.001)
+  .name("smallWavesElevation");
+
+gui
+  .add(waterMaterial.uniforms.uSmallWavesFrequency, "value")
+  .min(0)
+  .max(10)
+  .step(0.001)
+  .name("smallWavesFrequency");
+
+gui
+  .add(waterMaterial.uniforms.uSmallWavesSpeed, "value")
+  .min(0)
+  .max(10)
+  .step(0.001)
+  .name("smallWavesSpeed");
+
+gui
+  .add(waterMaterial.uniforms.uSmallWavesIterations, "value")
+  .min(0)
+  .max(10)
+  .step(1)
+  .name("smallWavesIterations");
+
+gui.addColor(debugObject, "surfaceColor").onChange(() => {
+  waterMaterial.uniforms.uSurfaceColor.value.set(debugObject.surfaceColor);
+});
+
+gui
+  .add(waterMaterial.uniforms.uColorOffset, "value")
+  .min(0)
+  .max(1)
+  .step(0.001)
+  .name("colorOffset");
+
+gui
+  .add(waterMaterial.uniforms.uColorMultiplier, "value")
+  .min(0)
+  .max(10)
+  .step(0.001)
+  .name("colorMultiplier");
 
 gui
   .add(renderer, "toneMapping", {
@@ -186,6 +278,9 @@ const tick = () => {
   const elapsedTime = clock.getElapsedTime();
   const deltaTime = elapsedTime - previousTime;
   previousTime = elapsedTime;
+
+  // Update water
+  waterMaterial.uniforms.uTime.value = elapsedTime;
 
   // Update Mixer
   if (mixer) {
