@@ -6,6 +6,7 @@ import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader.js";
 import waterVertexShader from "./shaders/water/vertex.glsl?raw";
 import waterFragmentShader from "./shaders/water/fragment.glsl?raw";
+import { RGBELoader } from "three/examples/jsm/loaders/RGBELoader.js";
 
 /**
  * Base
@@ -13,8 +14,9 @@ import waterFragmentShader from "./shaders/water/fragment.glsl?raw";
 // Debug
 const gui = new dat.GUI();
 const debugObject = {
-  depthColor: "#1b1b89",
-  surfaceColor: "#4fadfc",
+  depthColor: "#15a2c3",
+  surfaceColor: "#4fe7fc",
+  sandColor: "#f5f5f5",
 };
 
 // Canvas
@@ -74,7 +76,7 @@ gltfLoader.load("models/lowPolyIslandWithoutWater.glb", (gltf) => {
 /**
  * Water
  */
-const waterGeometry = new THREE.PlaneGeometry(10, 10, 32, 32);
+const waterGeometry = new THREE.PlaneGeometry(30, 30, 200, 200);
 const waterMaterial = new THREE.ShaderMaterial({
   uniforms: {
     uTime: { value: 0 },
@@ -91,6 +93,18 @@ const waterMaterial = new THREE.ShaderMaterial({
     uSurfaceColor: { value: new THREE.Color(debugObject.surfaceColor) },
     uColorOffset: { value: 0.66 },
     uColorMultiplier: { value: 2.5 },
+
+    uAlpha: { value: 1.0 },
+
+    uEnvMap: { value: null },
+    uEnvMapIntensity: { value: 1 },
+
+    cubeMap: { value: null }, // The reflection map
+    tReflection: { value: null }, // The reflection texture
+    tRefraction: { value: null }, // The refraction texture
+    fReflectionFactor: { value: 0.9 }, // The reflection factor
+    fRefractionFactor: { value: 0.8 }, // The refraction factor
+    fDisplacementFactor: { value: 0.02 }, // The displacement factor
   },
   vertexShader: waterVertexShader,
   fragmentShader: waterFragmentShader,
@@ -99,9 +113,22 @@ const waterMaterial = new THREE.ShaderMaterial({
 });
 const water = new THREE.Mesh(waterGeometry, waterMaterial);
 water.rotation.x = -Math.PI * 0.5;
-water.position.y = 0.01;
+water.position.y = 0;
 water.name = "Water";
 scene.add(water);
+
+/**
+ * Sand
+ */
+
+const sandGeometry = new THREE.PlaneGeometry(30, 30, 64, 64);
+const sandMaterial = new THREE.MeshStandardMaterial({
+  color: debugObject.sandColor,
+});
+const sand = new THREE.Mesh(sandGeometry, sandMaterial);
+sand.rotation.x = -Math.PI * 0.5;
+sand.position.y = -0.4;
+scene.add(sand);
 
 /**
  * Lights
@@ -174,10 +201,9 @@ renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.physicallyCorrectLights = true;
 renderer.outputEncoding = THREE.sRGBEncoding;
 renderer.toneMapping = THREE.ReinhardToneMapping;
-renderer.toneMappingExposure = 3;
+renderer.toneMappingExposure = 1;
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-renderer.setClearColor(0x99ccff, 1);
 
 // Debug
 gui
@@ -236,6 +262,10 @@ gui
   .step(1)
   .name("smallWavesIterations");
 
+gui.addColor(debugObject, "depthColor").onChange(() => {
+  waterMaterial.uniforms.uDepthColor.value.set(debugObject.depthColor);
+});
+
 gui.addColor(debugObject, "surfaceColor").onChange(() => {
   waterMaterial.uniforms.uSurfaceColor.value.set(debugObject.surfaceColor);
 });
@@ -255,6 +285,13 @@ gui
   .name("colorMultiplier");
 
 gui
+  .add(waterMaterial.uniforms.uAlpha, "value")
+  .min(0)
+  .max(1)
+  .step(0.001)
+  .name("alpha");
+
+gui
   .add(renderer, "toneMapping", {
     No: THREE.NoToneMapping,
     Linear: THREE.LinearToneMapping,
@@ -268,6 +305,38 @@ gui
   });
 
 gui.add(renderer, "toneMappingExposure").min(0).max(10).step(0.001);
+
+// Environment map
+const envMapLoader = new RGBELoader();
+envMapLoader.load("envMaps/quarry_01_puresky_4k.hdr", (texture) => {
+  texture.mapping = THREE.EquirectangularReflectionMapping;
+
+  scene.background = texture;
+  scene.environment = texture;
+
+  // Create a cube camera and position it at the object's position
+  // const cubeRenderTarget = new THREE.WebGLCubeRenderTarget(128, {
+  //   generateMipmaps: true,
+  //   minFilter: THREE.LinearMipmapLinearFilter,
+  // });
+  // var cubeCamera = new THREE.CubeCamera(0.1, 1000, cubeRenderTarget);
+  // cubeCamera.position.copy(water.position);
+
+  // // Render the scene from the perspective of the cube camera to the cube map
+  // cubeCamera.update(renderer, scene);
+
+  // // Get the cube map from the cube camera
+  // var cubeMap = cubeCamera.renderTarget.texture;
+
+  // // Set the cube map as the environment map for the object
+  // waterMaterial.uniforms.cubeMap.value = cubeMap;
+
+  // // Reflection
+  // waterMaterial.uniforms.uReflectionMap.value = cubeMap;
+
+  updateAllMaterials();
+});
+
 /**
  * Animate
  */

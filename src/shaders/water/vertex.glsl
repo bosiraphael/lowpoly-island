@@ -10,6 +10,8 @@ uniform float uSmallWavesSpeed;
 uniform float uSmallWavesIterations;
 
 varying float vElevation;
+varying vec3 vReflect;
+varying vec3 vRefract[3];
 
 //	Classic Perlin 3D Noise 
 //	by Stefan Gustavson
@@ -102,8 +104,14 @@ void main (){
     vec4 viewPosition = viewMatrix * modelPosition;
     vec4 projectedPosition = projectionMatrix * viewPosition;
 
+    vec3 worldNormal = normalize(mat3(modelMatrix[0].xyz, modelMatrix[1].xyz, modelMatrix[2].xyz) * normal);
+
     gl_Position = projectedPosition;
 
     // Varyings
     vElevation = elevation;
+
+    // vReflect = reflect(normalize(viewPosition.xyz), worldNormal);
+    // vRefract[0] = refract(normalize(viewPosition.xyz), worldNormal, 1.333);
+    // vRefract[1] = refract(normalize(viewPosition.xyz), worldNormal, 1.0/1.333);
 }
