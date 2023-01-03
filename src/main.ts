@@ -44,7 +44,6 @@ const updateAllMaterials = () => {
       child.material.needsUpdate = true;
       child.castShadow = true;
       child.receiveShadow = true;
-      console.log(child);
     }
     if (child instanceof THREE.Mesh && child.name === "Water") {
       child.material.transparent = true;
@@ -81,10 +80,10 @@ const waterMaterial = new THREE.ShaderMaterial({
   uniforms: {
     uTime: { value: 0 },
 
-    uBigWavesElevation: { value: 0.2 },
-    uBigWavesFrequency: { value: new THREE.Vector2(4, 1.5) },
+    uBigWavesElevation: { value: 0.08 },
+    uBigWavesFrequency: { value: new THREE.Vector2(0.6, 0.4) },
     uBigWavesSpeed: { value: 0.75 },
-    uSmallWavesElevation: { value: 0.15 },
+    uSmallWavesElevation: { value: 0.25 },
     uSmallWavesFrequency: { value: 4 },
     uSmallWavesSpeed: { value: 0.2 },
     uSmallWavesIterations: { value: 4 },
@@ -94,17 +93,12 @@ const waterMaterial = new THREE.ShaderMaterial({
     uColorOffset: { value: 0.66 },
     uColorMultiplier: { value: 2.5 },
 
-    uAlpha: { value: 1.0 },
+    uAlpha: { value: 0.8 },
 
     uEnvMap: { value: null },
     uEnvMapIntensity: { value: 1 },
 
-    cubeMap: { value: null }, // The reflection map
-    tReflection: { value: null }, // The reflection texture
-    tRefraction: { value: null }, // The refraction texture
-    fReflectionFactor: { value: 0.9 }, // The reflection factor
-    fRefractionFactor: { value: 0.8 }, // The refraction factor
-    fDisplacementFactor: { value: 0.02 }, // The displacement factor
+    uResolution: { value: new THREE.Vector2(200, 200) },
   },
   vertexShader: waterVertexShader,
   fragmentShader: waterFragmentShader,
@@ -121,14 +115,14 @@ scene.add(water);
  * Sand
  */
 
-const sandGeometry = new THREE.PlaneGeometry(30, 30, 64, 64);
-const sandMaterial = new THREE.MeshStandardMaterial({
-  color: debugObject.sandColor,
-});
-const sand = new THREE.Mesh(sandGeometry, sandMaterial);
-sand.rotation.x = -Math.PI * 0.5;
-sand.position.y = -0.4;
-scene.add(sand);
+// const sandGeometry = new THREE.PlaneGeometry(30, 30, 64, 64);
+// const sandMaterial = new THREE.MeshStandardMaterial({
+//   color: debugObject.sandColor,
+// });
+// const sand = new THREE.Mesh(sandGeometry, sandMaterial);
+// sand.rotation.x = -Math.PI * 0.5;
+// sand.position.y = -0.4;
+// scene.add(sand);
 
 /**
  * Lights
@@ -187,7 +181,7 @@ scene.add(camera);
 const controls = new OrbitControls(camera, canvas);
 controls.target.set(0, 0.75, 0);
 controls.enableDamping = true;
-controls.maxPolarAngle = Math.PI / 2;
+//controls.maxPolarAngle = Math.PI / 2;
 
 /**
  * Renderer
@@ -308,31 +302,11 @@ gui.add(renderer, "toneMappingExposure").min(0).max(10).step(0.001);
 
 // Environment map
 const envMapLoader = new RGBELoader();
-envMapLoader.load("envMaps/quarry_01_puresky_4k.hdr", (texture) => {
+envMapLoader.load("envMaps/quarry_04_puresky_4k.hdr", (texture) => {
   texture.mapping = THREE.EquirectangularReflectionMapping;
 
   scene.background = texture;
   scene.environment = texture;
-
-  // Create a cube camera and position it at the object's position
-  // const cubeRenderTarget = new THREE.WebGLCubeRenderTarget(128, {
-  //   generateMipmaps: true,
-  //   minFilter: THREE.LinearMipmapLinearFilter,
-  // });
-  // var cubeCamera = new THREE.CubeCamera(0.1, 1000, cubeRenderTarget);
-  // cubeCamera.position.copy(water.position);
-
-  // // Render the scene from the perspective of the cube camera to the cube map
-  // cubeCamera.update(renderer, scene);
-
-  // // Get the cube map from the cube camera
-  // var cubeMap = cubeCamera.renderTarget.texture;
-
-  // // Set the cube map as the environment map for the object
-  // waterMaterial.uniforms.cubeMap.value = cubeMap;
-
-  // // Reflection
-  // waterMaterial.uniforms.uReflectionMap.value = cubeMap;
 
   updateAllMaterials();
 });
