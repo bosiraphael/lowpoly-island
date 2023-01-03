@@ -1,18 +1,17 @@
 import "./style.css";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
-import * as dat from "dat.gui";
+//import * as dat from "dat.gui";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader.js";
 import waterVertexShader from "./shaders/water/vertex.glsl?raw";
 import waterFragmentShader from "./shaders/water/fragment.glsl?raw";
-//import { RGBELoader } from "three/examples/jsm/loaders/RGBELoader.js";
 
 /**
  * Base
  */
 // Debug
-const gui = new dat.GUI();
+//const gui = new dat.GUI();
 const debugObject = {
   depthColor: "#15a2c3",
   surfaceColor: "#4fe7fc",
@@ -211,130 +210,121 @@ renderer.toneMappingExposure = 1.6;
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
-// Debug
-gui
-  .add(waterMaterial.uniforms.uBigWavesElevation, "value")
-  .min(0)
-  .max(1)
-  .step(0.001)
-  .name("bigWavesElevation");
+/**
+ * Debug
+ */
+// gui
+//   .add(waterMaterial.uniforms.uBigWavesElevation, "value")
+//   .min(0)
+//   .max(1)
+//   .step(0.001)
+//   .name("bigWavesElevation");
 
-gui
-  .add(waterMaterial.uniforms.uBigWavesFrequency.value, "x")
-  .min(0)
-  .max(10)
-  .step(0.001)
-  .name("BigWavesFrequencyX");
+// gui
+//   .add(waterMaterial.uniforms.uBigWavesFrequency.value, "x")
+//   .min(0)
+//   .max(10)
+//   .step(0.001)
+//   .name("BigWavesFrequencyX");
 
-gui
-  .add(waterMaterial.uniforms.uBigWavesFrequency.value, "y")
-  .min(0)
-  .max(10)
-  .step(0.001)
-  .name("BigWavesFrequencyY");
+// gui
+//   .add(waterMaterial.uniforms.uBigWavesFrequency.value, "y")
+//   .min(0)
+//   .max(10)
+//   .step(0.001)
+//   .name("BigWavesFrequencyY");
 
-gui
-  .add(waterMaterial.uniforms.uBigWavesSpeed, "value")
-  .min(0)
-  .max(10)
-  .step(0.001)
-  .name("BigWavesSpeed");
+// gui
+//   .add(waterMaterial.uniforms.uBigWavesSpeed, "value")
+//   .min(0)
+//   .max(10)
+//   .step(0.001)
+//   .name("BigWavesSpeed");
 
-gui
-  .add(waterMaterial.uniforms.uSmallWavesElevation, "value")
-  .min(0)
-  .max(1)
-  .step(0.001)
-  .name("smallWavesElevation");
+// gui
+//   .add(waterMaterial.uniforms.uSmallWavesElevation, "value")
+//   .min(0)
+//   .max(1)
+//   .step(0.001)
+//   .name("smallWavesElevation");
 
-gui
-  .add(waterMaterial.uniforms.uSmallWavesFrequency, "value")
-  .min(0)
-  .max(10)
-  .step(0.001)
-  .name("smallWavesFrequency");
+// gui
+//   .add(waterMaterial.uniforms.uSmallWavesFrequency, "value")
+//   .min(0)
+//   .max(10)
+//   .step(0.001)
+//   .name("smallWavesFrequency");
 
-gui
-  .add(waterMaterial.uniforms.uSmallWavesSpeed, "value")
-  .min(0)
-  .max(10)
-  .step(0.001)
-  .name("smallWavesSpeed");
+// gui
+//   .add(waterMaterial.uniforms.uSmallWavesSpeed, "value")
+//   .min(0)
+//   .max(10)
+//   .step(0.001)
+//   .name("smallWavesSpeed");
 
-gui
-  .add(waterMaterial.uniforms.uSmallWavesIterations, "value")
-  .min(0)
-  .max(10)
-  .step(1)
-  .name("smallWavesIterations");
+// gui
+//   .add(waterMaterial.uniforms.uSmallWavesIterations, "value")
+//   .min(0)
+//   .max(10)
+//   .step(1)
+//   .name("smallWavesIterations");
 
-gui.addColor(debugObject, "background").onChange(() => {
-  scene.background = new THREE.Color(debugObject.background);
-});
-
-gui.addColor(debugObject, "depthColor").onChange(() => {
-  waterMaterial.uniforms.uDepthColor.value.set(debugObject.depthColor);
-});
-
-gui.addColor(debugObject, "surfaceColor").onChange(() => {
-  waterMaterial.uniforms.uSurfaceColor.value.set(debugObject.surfaceColor);
-});
-
-gui
-  .add(waterMaterial.uniforms.uColorOffset, "value")
-  .min(0)
-  .max(1)
-  .step(0.001)
-  .name("colorOffset");
-
-gui
-  .add(waterMaterial.uniforms.uColorMultiplier, "value")
-  .min(0)
-  .max(10)
-  .step(0.001)
-  .name("colorMultiplier");
-
-gui
-  .add(waterMaterial.uniforms.uAlpha, "value")
-  .min(0)
-  .max(1)
-  .step(0.001)
-  .name("alpha");
-
-gui
-  .add(renderer, "toneMapping", {
-    No: THREE.NoToneMapping,
-    Linear: THREE.LinearToneMapping,
-    Reinhard: THREE.ReinhardToneMapping,
-    Cineon: THREE.CineonToneMapping,
-    ACESFilmic: THREE.ACESFilmicToneMapping,
-  })
-  .onChange(() => {
-    renderer.toneMapping = Number(renderer.toneMapping);
-    updateAllMaterials();
-  });
-
-gui.add(renderer, "toneMappingExposure").min(0).max(10).step(0.001);
-
-gui
-  .add(debugObject, "directionalLightPower")
-  .min(0)
-  .max(10)
-  .step(0.001)
-  .onChange(() => {
-    directionalLight.intensity = debugObject.directionalLightPower;
-  });
-
-// Environment map
-// const envMapLoader = new RGBELoader();
-// envMapLoader.load("envMaps/quarry_04_puresky_4k.hdr", (texture) => {
-//   texture.mapping = THREE.EquirectangularReflectionMapping;
-
-//   scene.background = texture;
-//   scene.environment = texture;
-
-//   updateAllMaterials();
+// gui.addColor(debugObject, "background").onChange(() => {
+//   scene.background = new THREE.Color(debugObject.background);
 // });
+
+// gui.addColor(debugObject, "depthColor").onChange(() => {
+//   waterMaterial.uniforms.uDepthColor.value.set(debugObject.depthColor);
+// });
+
+// gui.addColor(debugObject, "surfaceColor").onChange(() => {
+//   waterMaterial.uniforms.uSurfaceColor.value.set(debugObject.surfaceColor);
+// });
+
+// gui
+//   .add(waterMaterial.uniforms.uColorOffset, "value")
+//   .min(0)
+//   .max(1)
+//   .step(0.001)
+//   .name("colorOffset");
+
+// gui
+//   .add(waterMaterial.uniforms.uColorMultiplier, "value")
+//   .min(0)
+//   .max(10)
+//   .step(0.001)
+//   .name("colorMultiplier");
+
+// gui
+//   .add(waterMaterial.uniforms.uAlpha, "value")
+//   .min(0)
+//   .max(1)
+//   .step(0.001)
+//   .name("alpha");
+
+// gui
+//   .add(renderer, "toneMapping", {
+//     No: THREE.NoToneMapping,
+//     Linear: THREE.LinearToneMapping,
+//     Reinhard: THREE.ReinhardToneMapping,
+//     Cineon: THREE.CineonToneMapping,
+//     ACESFilmic: THREE.ACESFilmicToneMapping,
+//   })
+//   .onChange(() => {
+//     renderer.toneMapping = Number(renderer.toneMapping);
+//     updateAllMaterials();
+//   });
+
+// gui.add(renderer, "toneMappingExposure").min(0).max(10).step(0.001);
+
+// gui
+//   .add(debugObject, "directionalLightPower")
+//   .min(0)
+//   .max(10)
+//   .step(0.001)
+//   .onChange(() => {
+//     directionalLight.intensity = debugObject.directionalLightPower;
+//   });
 
 /**
  * Animate
