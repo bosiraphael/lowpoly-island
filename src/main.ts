@@ -18,6 +18,7 @@ const debugObject = {
   surfaceColor: "#4fe7fc",
   sandColor: "#f5f5f5",
   background: "#a5e7ff",
+  directionalLightPower: 8,
 };
 
 // Canvas
@@ -77,30 +78,34 @@ gltfLoader.load("models/lowPolyIslandWithoutWater.glb", (gltf) => {
 /**
  * Water
  */
-const waterGeometry = new THREE.PlaneGeometry(30, 30, 200, 200);
+const waterGeometry = new THREE.PlaneGeometry(50, 50, 500, 500);
 const waterMaterial = new THREE.ShaderMaterial({
-  uniforms: {
-    uTime: { value: 0 },
+  uniforms: THREE.UniformsUtils.merge([
+    THREE.UniformsLib["fog"],
+    {
+      uTime: { value: 0 },
 
-    uBigWavesElevation: { value: 0.08 },
-    uBigWavesFrequency: { value: new THREE.Vector2(0.6, 0.4) },
-    uBigWavesSpeed: { value: 0.75 },
-    uSmallWavesElevation: { value: 0.25 },
-    uSmallWavesFrequency: { value: 4 },
-    uSmallWavesSpeed: { value: 0.2 },
-    uSmallWavesIterations: { value: 4 },
+      uBigWavesElevation: { value: 0.08 },
+      uBigWavesFrequency: { value: new THREE.Vector2(0.6, 0.4) },
+      uBigWavesSpeed: { value: 0.75 },
+      uSmallWavesElevation: { value: 0.25 },
+      uSmallWavesFrequency: { value: 4 },
+      uSmallWavesSpeed: { value: 0.2 },
+      uSmallWavesIterations: { value: 4 },
 
-    uDepthColor: { value: new THREE.Color(debugObject.depthColor) },
-    uSurfaceColor: { value: new THREE.Color(debugObject.surfaceColor) },
-    uColorOffset: { value: 0.66 },
-    uColorMultiplier: { value: 2.5 },
+      uDepthColor: { value: new THREE.Color(debugObject.depthColor) },
+      uSurfaceColor: { value: new THREE.Color(debugObject.surfaceColor) },
+      uColorOffset: { value: 0.66 },
+      uColorMultiplier: { value: 2.5 },
 
-    uAlpha: { value: 0.8 },
-  },
+      uAlpha: { value: 0.8 },
+    },
+  ]),
   vertexShader: waterVertexShader,
   fragmentShader: waterFragmentShader,
   transparent: true,
   side: THREE.DoubleSide,
+  fog: true,
 });
 const water = new THREE.Mesh(waterGeometry, waterMaterial);
 water.rotation.x = -Math.PI * 0.5;
@@ -112,7 +117,7 @@ scene.add(water);
  * Sand
  */
 
-const sandGeometry = new THREE.PlaneGeometry(30, 30, 64, 64);
+const sandGeometry = new THREE.PlaneGeometry(50, 50, 64, 64);
 const sandMaterial = new THREE.MeshStandardMaterial({
   color: debugObject.sandColor,
 });
@@ -122,12 +127,22 @@ sand.position.y = -0.4;
 scene.add(sand);
 
 /**
+ * Fog
+ */
+
+const fog = new THREE.Fog(debugObject.background, 10, 20);
+scene.fog = fog;
+
+/**
  * Lights
  */
-const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
+const ambientLight = new THREE.AmbientLight(0xffffff, 1);
 scene.add(ambientLight);
 
-const directionalLight = new THREE.DirectionalLight(0xffffff, 5);
+const directionalLight = new THREE.DirectionalLight(
+  0xffffff,
+  debugObject.directionalLightPower
+);
 directionalLight.castShadow = true;
 directionalLight.shadow.mapSize.set(1024, 1024);
 directionalLight.shadow.camera.far = 100;
@@ -192,7 +207,7 @@ renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.physicallyCorrectLights = true;
 renderer.outputEncoding = THREE.sRGBEncoding;
 renderer.toneMapping = THREE.ReinhardToneMapping;
-renderer.toneMappingExposure = 2.4;
+renderer.toneMappingExposure = 1.6;
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
@@ -300,6 +315,15 @@ gui
   });
 
 gui.add(renderer, "toneMappingExposure").min(0).max(10).step(0.001);
+
+gui
+  .add(debugObject, "directionalLightPower")
+  .min(0)
+  .max(10)
+  .step(0.001)
+  .onChange(() => {
+    directionalLight.intensity = debugObject.directionalLightPower;
+  });
 
 // Environment map
 // const envMapLoader = new RGBELoader();

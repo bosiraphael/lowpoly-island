@@ -11,6 +11,8 @@ uniform float uSmallWavesIterations;
 
 varying float vElevation;
 
+#include <fog_pars_vertex>
+
 //	Classic Perlin 3D Noise 
 //	by Stefan Gustavson
 //
@@ -87,6 +89,10 @@ float cnoise(vec3 P){
 }
 
 void main (){
+    #include <begin_vertex>
+    #include <project_vertex>
+    #include <fog_vertex>
+
     vec4 modelPosition = modelMatrix * vec4(position, 1.0);
 
     float elevation = sin(modelPosition.x * uBigWavesFrequency.x - uTime * uBigWavesSpeed) *
