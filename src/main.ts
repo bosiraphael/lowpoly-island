@@ -6,7 +6,7 @@ import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader.js";
 import waterVertexShader from "./shaders/water/vertex.glsl?raw";
 import waterFragmentShader from "./shaders/water/fragment.glsl?raw";
-import { RGBELoader } from "three/examples/jsm/loaders/RGBELoader.js";
+//import { RGBELoader } from "three/examples/jsm/loaders/RGBELoader.js";
 
 /**
  * Base
@@ -17,6 +17,7 @@ const debugObject = {
   depthColor: "#15a2c3",
   surfaceColor: "#4fe7fc",
   sandColor: "#f5f5f5",
+  background: "#a5e7ff",
 };
 
 // Canvas
@@ -28,6 +29,7 @@ if (!canvas) {
 
 // Scene
 const scene = new THREE.Scene();
+scene.background = new THREE.Color(debugObject.background);
 
 /**
  * Update all materials
@@ -94,11 +96,6 @@ const waterMaterial = new THREE.ShaderMaterial({
     uColorMultiplier: { value: 2.5 },
 
     uAlpha: { value: 0.8 },
-
-    uEnvMap: { value: null },
-    uEnvMapIntensity: { value: 1 },
-
-    uResolution: { value: new THREE.Vector2(200, 200) },
   },
   vertexShader: waterVertexShader,
   fragmentShader: waterFragmentShader,
@@ -115,14 +112,14 @@ scene.add(water);
  * Sand
  */
 
-// const sandGeometry = new THREE.PlaneGeometry(30, 30, 64, 64);
-// const sandMaterial = new THREE.MeshStandardMaterial({
-//   color: debugObject.sandColor,
-// });
-// const sand = new THREE.Mesh(sandGeometry, sandMaterial);
-// sand.rotation.x = -Math.PI * 0.5;
-// sand.position.y = -0.4;
-// scene.add(sand);
+const sandGeometry = new THREE.PlaneGeometry(30, 30, 64, 64);
+const sandMaterial = new THREE.MeshStandardMaterial({
+  color: debugObject.sandColor,
+});
+const sand = new THREE.Mesh(sandGeometry, sandMaterial);
+sand.rotation.x = -Math.PI * 0.5;
+sand.position.y = -0.4;
+scene.add(sand);
 
 /**
  * Lights
@@ -174,14 +171,14 @@ const camera = new THREE.PerspectiveCamera(
   0.1,
   100
 );
-camera.position.set(2, 2, 2);
+camera.position.set(0, 1, 5);
 scene.add(camera);
 
 // Controls
 const controls = new OrbitControls(camera, canvas);
 controls.target.set(0, 0.75, 0);
 controls.enableDamping = true;
-//controls.maxPolarAngle = Math.PI / 2;
+controls.maxPolarAngle = Math.PI / 2;
 
 /**
  * Renderer
@@ -195,7 +192,7 @@ renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.physicallyCorrectLights = true;
 renderer.outputEncoding = THREE.sRGBEncoding;
 renderer.toneMapping = THREE.ReinhardToneMapping;
-renderer.toneMappingExposure = 1;
+renderer.toneMappingExposure = 2.4;
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
@@ -256,6 +253,10 @@ gui
   .step(1)
   .name("smallWavesIterations");
 
+gui.addColor(debugObject, "background").onChange(() => {
+  scene.background = new THREE.Color(debugObject.background);
+});
+
 gui.addColor(debugObject, "depthColor").onChange(() => {
   waterMaterial.uniforms.uDepthColor.value.set(debugObject.depthColor);
 });
@@ -301,15 +302,15 @@ gui
 gui.add(renderer, "toneMappingExposure").min(0).max(10).step(0.001);
 
 // Environment map
-const envMapLoader = new RGBELoader();
-envMapLoader.load("envMaps/quarry_04_puresky_4k.hdr", (texture) => {
-  texture.mapping = THREE.EquirectangularReflectionMapping;
+// const envMapLoader = new RGBELoader();
+// envMapLoader.load("envMaps/quarry_04_puresky_4k.hdr", (texture) => {
+//   texture.mapping = THREE.EquirectangularReflectionMapping;
 
-  scene.background = texture;
-  scene.environment = texture;
+//   scene.background = texture;
+//   scene.environment = texture;
 
-  updateAllMaterials();
-});
+//   updateAllMaterials();
+// });
 
 /**
  * Animate
